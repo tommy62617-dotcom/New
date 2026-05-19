@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>我的 Laravel 密碼產生器</title>
+
+    <style>
+
+        /* 簡單的 CSS 讓畫面好看一點 */
+
+        body {
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            background-color: #f0f2f5;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            height: 100vh;
+
+            margin: 0;
+
+        }
+
+        .card {
+
+            background-color: white;
+
+            padding: 30px;
+
+            border-radius: 10px;
+
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+            width: 350px;
+
+            text-align: center;
+
+        }​
+
+        .form-group {
+
+            margin-bottom: 20px;
+
+            text-align: left;
+
+        }
+
+        input[type="number"] {
+
+            width: 60px;
+
+            padding: 5px;
+
+            margin-left: 10px;
+
+        }
+
+        button {
+
+            background-color: #ff2d20; /* Laravel 的經典紅色 */
+
+            color: white;
+
+            border: none;
+
+            padding: 10px 20px;
+
+            font-size: 16px;
+
+            border-radius: 5px;
+
+            cursor: pointer;
+
+            width: 100%;
+
+            transition: background-color 0.3s;
+
+        }
+
+        button:hover {
+
+            background-color: #cc2419;
+
+        }
+
+        .result-box {
+
+            margin-top: 20px;
+
+            padding: 15px;
+
+            background-color: #e9ecef;
+
+            border-radius: 5px;
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            color: #333;
+
+            word-break: break-all; /* 避免密碼太長破版 */
+
+            min-height: 24px;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+
+    <div class="card">
+
+        <h2>密碼產生器 API 測試</h2>
+
+        
+
+        <div class="form-group">
+
+            <label for="length">密碼長度：</label>
+
+            <input type="number" id="length" value="12" min="4" max="64">
+
+        </div>
+
+
+
+
+        <div class="form-group">
+
+            <label>
+
+                <input type="checkbox" id="symbols"> 包含特殊符號​
+
+            </label>
+
+        </div>
+
+
+
+
+        <!-- 點擊這個按鈕會觸發下方的 JS 程式碼 -->
+
+        <button id="generate-btn">向後端請求密碼</button>
+
+
+
+
+        <!-- 顯示結果的地方 -->
+
+        <div class="result-box" id="result">等待操作...</div>
+
+    </div>
+
+
+
+
+    <script>
+
+        // 選取畫面上的元素​
+
+        const btn = document.getElementById('generate-btn');
+
+        const lengthInput = document.getElementById('length');
+
+        const symbolsCheckbox = document.getElementById('symbols');
+
+        const resultBox = document.getElementById('result');
+
+
+
+
+        // 綁定按鈕點擊事件​
+
+        btn.addEventListener('click', function() {
+
+            // 1. 取得使用者輸入的值​
+
+            const length = lengthInput.value;
+
+            const symbols = symbolsCheckbox.checked ? 1 : 0;
+
+
+
+
+            // 2. 組裝要發送給 Laravel 的 API 網址 (請確保這與你的 Laravel 本地網址一致)​
+
+            const apiUrl = `http://localhost:8000/api/generate-password?length=${length}&symbols=${symbols}`;
+
+
+
+
+            // 改變文字，提示使用者正在載入​
+
+            resultBox.textContent = '產生中...';
+            resultBox.style.color = '#888';
+
+
+
+
+            // 3. 使用 fetch 發送 GET 請求給後端​
+
+            fetch(apiUrl, {
+
+                method: 'GET',
+
+                mode: "cors",
+
+                headers: {
+
+                    'Accept': 'application/json' // 告訴後端我們預期收到 JSON​
+
+                }
+
+            })
+
+            .then(response => {
+
+                if (!response.ok) {
+
+                    throw new Error('網路回應不成功');
+
+                }
+
+                return response.json(); // 解析 JSON 格式的回應​
+
+            })
+
+            .then(data => {
+
+                // 4. 成功拿到資料，將密碼顯示在畫面上​
+
+                if (data.success) {
+
+                    resultBox.textContent = data.data.password;
+
+                    resultBox.style.color = '#000'; // 恢復黑色​
+
+                } else {
+
+                    resultBox.textContent = '發生錯誤：' + data.message;
+
+                    resultBox.style.color = 'red';
+
+                }
+
+            })
+
+            .catch(error => {
+
+                // 5. 錯誤處理 (例如 Laravel 沒開機，或是跨域問題)​
+
+                console.error('API 呼叫失敗:', error);
+
+                resultBox.textContent = '連線失敗！請確認後端已啟動。';
+
+                resultBox.style.color = 'red';
+
+            });
+
+        });
+
+    </script>
+
+
+
+
+</body>
+
+</html>
+
